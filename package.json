@@ -1,0 +1,33 @@
+{
+  "name": "cycle-gtk",
+  "version": "1.0.0",
+  "description": "A simple Cycle.js GTK application prototype",
+  "main": "index.js",
+  "scripts": {
+    "start": "jsgtk index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/TimurKiyivinski/cycle-gtk.git"
+  },
+  "keywords": [
+    "cycle",
+    "xstream",
+    "gtk",
+    "streams",
+    "linux"
+  ],
+  "author": "Timur Kiyivinski",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TimurKiyivinski/cycle-gtk/issues"
+  },
+  "homepage": "https://github.com/TimurKiyivinski/cycle-gtk#readme",
+  "dependencies": {
+    "@cycle/run": "^3.2.0",
+    "jsgtk": "^0.12.2",
+    "ramda": "^0.24.1",
+    "xstream": "^10.9.0"
+  }
+}

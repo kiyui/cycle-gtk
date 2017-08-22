@@ -2,7 +2,9 @@ const xs = require('xstream').default
 const R = require('ramda/dist/ramda.min.js')
 const Gtk = require('Gtk')
 
-function h (type, selector, options, children = []) {
+function h (type, selector, params = {}, children = []) {
+  const options = R.filter(param => typeof param !== 'function', params)
+  const addReducer = params.addReducer || false
   // Function patch acts as a reducer on widgets
   // This way we know if we should create a widget
   // or modify an existing widget based on the selector
@@ -35,8 +37,12 @@ function h (type, selector, options, children = []) {
     function createWidget () {
       const widget = new Gtk[type](options)
 
-      if (parent && parent.add) {
-        parent.add(widget)
+      if ((parent && parent.add) || addReducer) {
+        if (addReducer) {
+          addReducer(parent, widget, widgets)
+        } else {
+          parent.add(widget)
+        }
       }
 
       widgets[selector] = {
@@ -87,13 +93,23 @@ function makeGtkDriver () {
     }, seed, reducers)
   }
 
-  function performPatch (reducers, seed = false) {
-    return R.reduce((root, child) => {
-      if (typeof child === 'function') {
-        return child(widgetsProxy, root)
-      }
-      return performPatch(child, root)
-    }, seed, reducers)
+  function performPatch (reducers = [], parent = false) {
+    if (reducers.length === 0) {
+      return false
+    }
+
+    if (reducers.length > 2) {
+      throw new Error('Reducers expected to be of length 2 with structure x: [ p, x ]')
+    }
+
+    const reducer = R.head(reducers)
+    const children = R.last(reducers)
+
+    const widget = reducer(widgetsProxy, parent)
+
+    R.map(function patchChild (child) {
+      performPatch(child, widget)
+    }, children)
   }
 
   return function gtkDriver (sink$) {

@@ -41,7 +41,6 @@ function main ({ gtk, app }) {
   const showAll$ = xs.merge(
     gtkWindow$,
     gtk.select('#grid'),
-    gtk.select('#stack'),
     gtk.select('#sidebar'),
     gtk.select('#button_first'),
     gtk.select('#button_second'),
@@ -51,15 +50,22 @@ function main ({ gtk, app }) {
 
   const timer$ = xs.periodic(1000)
     .map(function createTimerWindow (i) {
-      function stackAddReducer (parent, child) {
-        parent.attach(child, 1, 0, 1, 1)
-        child.setVexpand(true)
-        child.setHexpand(true)
-      }
+      function sidebarAddReducer (parent, child) {
+        // Create stack for storing data
+        const stack = new Gtk.Stack()
+        parent.attach(stack, 1, 0, 1, 1)
+        stack.setVexpand(true)
+        stack.setHexpand(true)
 
-      function sidebarAddReducer (parent, child, widgets) {
-        child.setStack(parent)
-        widgets['#grid'].widget.attach(child, 0, 0, 1, 1)
+        // Attach stack to child
+        child.setStack(stack)
+        parent.attach(child, 0, 0, 1, 1)
+
+        // Add function to child so further children can call encapsulated functions
+        child.addTitled = function (child, key, label) {
+          stack.addTitled(child, key, label)
+          stack.showAll()
+        }
       }
 
       function makeButtonAddReducer (key) {
@@ -70,8 +76,7 @@ function main ({ gtk, app }) {
 
       return h('Window', '#window', { title: 'jsgtk', type: Gtk.WindowType.TOPLEVEL, windowPosition: Gtk.WindowPosition.CENTER }, [
         h('Grid', '#grid', {}, [
-          h('Stack', '#stack', { addReducer: stackAddReducer }, [
-            h('StackSidebar', '#sidebar', { addReducer: sidebarAddReducer }),
+          h('StackSidebar', '#sidebar', { addReducer: sidebarAddReducer }, [
             h('Button', '#button_first', { addReducer: makeButtonAddReducer('first'), label: `First ${i}` }),
             h('Button', '#button_second', { addReducer: makeButtonAddReducer('second'), label: `Second ${i}` }),
             h('Button', '#button_third', { addReducer: makeButtonAddReducer('third'), label: `Third ${i}` })
